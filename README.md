@@ -7,3 +7,17 @@
 - [Example 3](<EX3 companion search AXCir.ipynb>): AX Cir PIONIER data from [Gallenne et al. 2015](https://ui.adsabs.harvard.edu/abs/2015A%26A...579A..68G/abstract), shows how `PMOIRED` can be used to cover most of the features of [`CANDID`](https://github.com/amerand/CANDID)'s companion grid search and estimation of detection limit for a third component.
 - [Example 4](<EX4 Be model comparison with AMHRA.ipynb>): shows how the Keplerian disk model from [Delaa et al. (2011)](https://ui.adsabs.harvard.edu/abs/2011A%26A...529A..87D/abstract) has been implemented in `PMOIRED`, with validation on [AMHRA](https://amhra.oca.eu/AMHRA/index.htmhttps://amhra.oca.eu/AMHRA/index.htm) models and AMBER data from [Meilland et al. (2012)](https://ui.adsabs.harvard.edu/abs/2012A%26A...538A.110M/abstract)
 - [Example 5](<EX5 Binary with spectroscopic lines.ipynb>): multi-epochs binary fit of GRAVITY observations of o Leo, as shown in [Gallenne et al. (2023)](https://ui.adsabs.harvard.edu/abs/2023A%26A...672A.119G/abstract). The binary is resolved by GRAVITY, both astrometrically and and spectroscopically (Hydrogen Brackett$\gamma$ line at 2.166$\mu$m). The lines are fitted, and the radial velocities derived from GRAVITY are compared to the oribital fit.
+
+## Running in [Docker](https://www.docker.com/)
+The provided [docker file](Dockerfile) will generate a container to install PMOIRED and run the examples in Jupyter Lab. It assumes that `PMOIRED` sources are located in `../PMOIRED`. To generate the container, simply run:
+```
+docker build -t pmoired:latest .
+```
+to run a container which will use only the first four CPUs and exposed on port 8890 (including to outside world):
+```
+docker run -p 8890:8888 --name="pmoired8890" --cpuset-cpus=0-3 -d pmoired
+```
+in a browser, simply access `http://machine:8890` where *machine* is the IP/name of the computer running docker. To stop the container:
+```
+docker stop pmoired8890
+```
