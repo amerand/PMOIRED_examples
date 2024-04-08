@@ -1,4 +1,6 @@
 EX*.html
 *~
-DATA/o_Leo/*pmrd
-__pycache__
+DATA/o_Leo/*.pmrd
+DATA/o_Leo/*.dpy
+__pycache__/
+.ipynb_checkpoints/
