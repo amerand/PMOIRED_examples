@@ -6,7 +6,7 @@ RUN pip3 install scipy numpy matplotlib astropy astroquery jupyterlab ipympl
 #RUN cd /PMOIRED; pip3 install .
 RUN pip install -i https://test.pypi.org/simple/ pmoired==1.2
 # -- github.com/amerand/PMOIRED_examples
-ADD ../PMOIRED_examples /PMOIRED_examples
+ADD . /PMOIRED_examples
 WORKDIR /PMOIRED_examples
 EXPOSE 8888
 # --ip 0.0.0.0 to allow external connection
