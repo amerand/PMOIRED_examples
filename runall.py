@@ -26,5 +26,5 @@ if __name__=='__main__':
     for f in files:
         if os.path.exists(f.replace('.ipynb', '.html')):
             os.rename(f.replace('.ipynb', '.html'), 
-                      os.path.basename(f).replace('.ipynb', '.html'))
+                      os.path.join('html', os.path.basename(f).replace('.ipynb', '.html')))
     print('it took %.1f minutes'%((time.time()-t0)/60))
