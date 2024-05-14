@@ -77,9 +77,9 @@ oi.showGrid(interpolate=True, tight=True, cmap='magma')
 
 ## Significance of the detection
 
-`oi.grid` is the sorted (by $\chi_r^2$) list of grid points. Each fit contains a lof of information, the same as the best fit `oi.bestfit`. One can use the $\chi^2$ statistics which requires the null-hypothesis $\chi_r^2$, the test $\chi_r^2$ (<null-hypothesis) and the number of degrees of freedom. The function `pmoired.oimodels._nSigmas` wraps up the necessary calculations based on `scipy.stats.chi2.cdf` and `scipy.stats.chi2.ppf`. The null-hypothesis $\chi_r^2$ can be entered manually of computed using a model and the method `_chi2FromModel`.
+`oi.grid` is the sorted (by $\chi_r^2$) list of grid points. Each fit contains a lof of information, the same as the best fit `oi.bestfit`. One can use the $\chi^2$ statistics which requires the null-hypothesis $\chi_r^2$, the test $\chi_r^2$ (<null-hypothesis) and the number of degrees of freedom. The function `pmoired.oimodels._nSigmas` wraps up the necessary calculations based on `scipy.stats.chi2.cdf` and `scipy.stats.chi2.ppf`. The null-hypothesis $\chi_r^2$ can be entered manually of computed using a model and the method `_chi2FromModel`. To stay safely within numerical accuracy, the maximum significance is only 8 sigma (1e-15 chance of false detection).
 
-The in case below, the significance is about 8$\sigma$, which is also the result found with [`CANDID`](https://github.com/amerand/CANDID).
+In the case below, the significance is about 8$\sigma$, which is also the result found with [`CANDID`](https://github.com/amerand/CANDID).
 
 
 ```python
