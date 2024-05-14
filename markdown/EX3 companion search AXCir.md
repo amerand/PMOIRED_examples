@@ -70,7 +70,7 @@ oi.gridFit(expl, model=param, doNotFit=['*,f', 'c,ud'], prior=[('c,f', '<', 1)],
 
 ```python
 # -- show the 2D grid of reduced chi2
-oi.showGrid(interpolate=True, tight=True, cmap='magma')
+oi.showGrid(interpolate=True, tight=True)
 ```
 
 ## Significance of the detection
@@ -81,7 +81,7 @@ In the case below, the significance is about 8$\sigma$, which is also the result
 
 
 ```python
-oi.showGrid(interpolate=True, tight=True, cmap='magma', significance=bestUD)
+oi.showGrid(interpolate=True, tight=True, significance=bestUD)
 ```
 
 # Show best fit model (from grid)
@@ -139,19 +139,4 @@ oi.detectionLimit(expl, '3,f', model=best, Nfits=500, nsigma=3,
                             ('np.sqrt(3,x**2+3,y**2)', '>', step/2) ])
  
 oi.showLimGrid(mag=1)
-```
-
-
-```python
-
-```
-
-
-```python
-pmoired.oimodels._nSigmas(oi._chi2FromModel({'ud':0.8}), oi.grid[0]['chi2'], oi.grid[0]['ndof'])
-```
-
-
-```python
-
 ```
