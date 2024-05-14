@@ -14,6 +14,8 @@ In this example:
 ```python
 #-- uncomment to get interactive plots
 #%matplotlib widget
+import sys
+sys.path.append('../../PMOIRED/')
 import numpy as np
 import pmoired
 ```
@@ -53,6 +55,10 @@ expl = {'grid':{'c,x':(-R/2*step, R/2*step, step), 'c,y':(-R/2*step, R/2*step, s
 # -- setup the fit, as usual
 oi.setupFit({'obs':['V2', 'T3PHI']})
 
+# -- reference fit (no companion)
+oi.doFit({'ud':0.8})
+bestUD = oi.bestfit['best']
+
 # -- actual grid fit
 oi.gridFit(expl, model=param, doNotFit=['*,f', 'c,ud'], prior=[('c,f', '<', 1)], 
            constrain=[('np.sqrt(c,x**2+c,y**2)', '<=', R*step/2),
@@ -66,10 +72,21 @@ oi.gridFit(expl, model=param, doNotFit=['*,f', 'c,ud'], prior=[('c,f', '<', 1)],
 
 ```python
 # -- show the 2D grid of reduced chi2
-oi.showGrid()
+oi.showGrid(interpolate=True, tight=True, cmap='magma')
 ```
 
-# Show best fit model and fit to the data
+## Significance of the detection
+
+`oi.grid` is the sorted (by $\chi_r^2$) list of grid points. Each fit contains a lof of information, the same as the best fit `oi.bestfit`. One can use the $\chi^2$ statistics which requires the null-hypothesis $\chi_r^2$, the test $\chi_r^2$ (<null-hypothesis) and the number of degrees of freedom. The function `pmoired.oimodels._nSigmas` wraps up the necessary calculations based on `scipy.stats.chi2.cdf` and `scipy.stats.chi2.ppf`. The null-hypothesis $\chi_r^2$ can be entered manually of computed using a model and the method `_chi2FromModel`.
+
+The in case below, the significance is about 8$\sigma$, which is also the result found with [`CANDID`](https://github.com/amerand/CANDID).
+
+
+```python
+oi.showGrid(interpolate=True, tight=True, cmap='magma', significance=bestUD)
+```
+
+# Show best fit model (from grid)
 
 
 ```python
@@ -124,4 +141,19 @@ oi.detectionLimit(expl, '3,f', model=best, Nfits=500, nsigma=3,
                             ('np.sqrt(3,x**2+3,y**2)', '>', step/2) ])
  
 oi.showLimGrid(mag=1)
+```
+
+
+```python
+
+```
+
+
+```python
+pmoired.oimodels._nSigmas(oi._chi2FromModel({'ud':0.8}), oi.grid[0]['chi2'], oi.grid[0]['ndof'])
+```
+
+
+```python
+
 ```
