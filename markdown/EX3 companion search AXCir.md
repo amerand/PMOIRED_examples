@@ -14,8 +14,6 @@ In this example:
 ```python
 #-- uncomment to get interactive plots
 #%matplotlib widget
-import sys
-sys.path.append('../../PMOIRED/')
 import numpy as np
 import pmoired
 ```
