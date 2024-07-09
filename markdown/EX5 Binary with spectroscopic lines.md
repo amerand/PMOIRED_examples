@@ -82,12 +82,12 @@ _This computation for all epochs is quite long, even though it is parallelised. 
 from multiprocessing import Pool
 
 # -- remove tellurics
-with Pool(pmoired.MAX_THREADS) as p:
-    p.map(tellcorr.removeTellurics, files[:1])
+#with Pool(pmoired.MAX_THREADS) as p:
+#    p.map(tellcorr.removeTellurics, files)
 
 # -- (re)compute tellurics
 with Pool(pmoired.MAX_THREADS) as p:
-    p.map(tellcorr.gravity, files[:1])
+    p.map(tellcorr.gravity, files)
 ```
 
 

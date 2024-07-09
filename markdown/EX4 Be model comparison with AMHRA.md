@@ -137,7 +137,7 @@ def showCube(cube, imWl0=None, fig=0, imPow=1.0, imMax='100', cmap='inferno',
             cb.set_ticklabels(XcbL)
             cb.ax.tick_params(labelsize=6)
                 
-        plt.title('$\lambda$=%.5f$\mu$m'%cube['WL'][iwl], fontsize=8)
+        plt.title(r'$\lambda$=%.5f$\mu$m'%cube['WL'][iwl], fontsize=8)
     axs[0].invert_xaxis()
     plt.tight_layout()
     return axs

@@ -18,6 +18,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 from astropy import units as U
 
+import sys
+sys.path = ['../../PMOIRED/'] + sys.path
+
 import pmoired
 
 import oLeo_vrad # where radial velocity are defined, and function to return residuals to the fit
@@ -54,9 +57,6 @@ Comparing our result to [Gallenne et al. (2023)](https://ui.adsabs.harvard.edu/a
 
 
 ```python
-from importlib import reload
-reload(oLeo_vrad)
-
 # -- original parameters from Gallenne et al. 2023, table 6
 plx = 24.412 # parallax in mas
 m0 = {'1,ud':1.281, 
@@ -72,7 +72,30 @@ m0 = {'1,ud':1.281,
      '2,orb P': 14.498068,
      '2,orb a': 4.477,
      }
+def compareParams(bestfit, title='PMOIRED'):
+    _best = pmoired.oimodels.computeLambdaParams(bestfit['best'])
+    _uncer =  bestfit['uncer'].copy()
+    _uncer['2,orb MJD0'] = _uncer['MJD0-59690']
+    _uncer['2,orb P'] = _uncer['P-14.2']
+    print('parameter       Gallenne+23        '+title)
+    for k in m0.keys():
+        if not type(m0[k])==str and not type(m0[k])==type(oLeo_vrad.resiVrad):
+            dif = _best[k]-m0[k]
+            if k=='2,orb MJD0':
+                # MJD0 is compared modulo the period
+                dif = dif%(_best['2,orb P'])
+            if _uncer[k]>0:
+                dif /= _uncer[k]
+                unit = 'sigma'
+            else:
+                dif = None
+            if not dif is None:
+                print('%-12s'%k, '%13.6f -> %13.6f ± %11.6f (%5.1f%s)'%(m0[k], _best[k], _uncer[k], dif, unit))
 
+```
+
+
+```python
 m = m0.copy()
 
 # -- force the orbit to be circular
@@ -89,31 +112,13 @@ else:
 m['2,orb MJD0'] -= m['2,orb P']*round((m['2,orb MJD0'] - round(np.mean(allMJD), 0))/m['2,orb P'], 0)
 
 # -- only fit decimal part of the MJD0 to help fit converge
-m['DT'] = m['2,orb MJD0']%1
-m['2,orb MJD0'] = str(int(m['2,orb MJD0']))+' + $DT'
+m['MJD0-59690'] = m['2,orb MJD0']-59690
+m['2,orb MJD0'] = '$MJD0-59690 + 59690'
 
 # -- only fit decimal part of the Period to help fit converge
-Nd = 2
-m['DP'] = (m['2,orb P']-round(m['2,orb P'], Nd))*10**Nd
-m['2,orb P'] = str(round(m['2,orb P'], Nd))+' + $DP/10**%d'%Nd
-
-def compareParams(bestfit, title='PMOIRED'):
-    _best = pmoired.oimodels.computeLambdaParams(bestfit['best'])
-    _uncer =  bestfit['uncer'].copy(); _uncer['2,orb MJD0'] = _uncer['DT']; _uncer['2,orb P'] = _uncer['DP']*10**(-Nd)
-    print('parameter       Gallenne+23        '+title)
-    for k in m0.keys():
-        if not type(m0[k])==str and not type(m0[k])==type(oLeo_vrad.resiVrad):
-            dif = _best[k]-m0[k]
-            if k=='2,orb MJD0':
-                # MJD0 is compared modulo the period
-                dif = dif%(_best['2,orb P'])
-            if _uncer[k]>0:
-                dif /= _uncer[k]
-                unit = 'sigma'
-            else:
-                dif = None
-            if not dif is None:
-                print('%-12s'%k, '%13.6f -> %13.6f ± %11.6f (%5.1f%s)'%(m0[k], _best[k], _uncer[k], dif, unit))
+m['P-14.2'] = m['2,orb P']-14.2
+m['2,orb P'] = '$P-14.2 + 14.2'
+#display(m)
 
 # -- set up context of the fit
 oleo.setupFit({'obs':['T3PHI', '|V|'], })
@@ -131,10 +136,6 @@ oLeo_vrad.showOrbit(oleo.bestfit['best'], allMJD)
 ```python
 oleo.bootstrapFit(100)
 oleo.showBootstrap()
-```
-
-
-```python
 # -- compare with original parameters
 compareParams(oleo.boot, 'PMOIRED interf only (bootstrapped)')
 ```
@@ -163,7 +164,7 @@ m0 = {'1,ud':1.281,
      '2,orb omega': 214,
      '2,orb OMEGA': 191.6,
      '2,orb incl': 57.8,
-     '2,orb MJD0': 2450623.9-2400000.5,
+     '2,orb MJD0': 50623.4,
      '2,orb P': 14.498068,
      '2,orb a': 4.477,
      # -- radial velocities
@@ -178,7 +179,7 @@ m = m0.copy()
 forceCircular = True
 if forceCircular:
     m['2,orb e'] = 0
-    m['2,orb MJD0'] -= m['2,orb omega']/360*m['2,orb P']
+    m['2,orb MJD0'] -= m['2,orb omega']/360*m0['2,orb P']
     m['2,orb omega'] = 0
     doNotFit = ['2,orb e', '2,orb omega']
 else:
@@ -188,13 +189,13 @@ else:
 m['2,orb MJD0'] -= m['2,orb P']*round((m['2,orb MJD0']-round(np.mean(allMJD), 0))/m['2,orb P'], 0)
 
 # -- only fit decimal part of the MJD0 to help fit converge
-m['DT'] = m['2,orb MJD0']%1
-m['2,orb MJD0'] = str(int(m['2,orb MJD0']))+' + $DT'
+m['MJD0-59690'] = m['2,orb MJD0']-59690
+m['2,orb MJD0'] = '$MJD0-59690 + 59690'
 
 # -- only fit decimal part of the Period to help fit converge
-N = 2
-m['DP'] = (m['2,orb P']-round(m['2,orb P'], N))*10**N
-m['2,orb P'] = str(round(m['2,orb P'], N))+' + $DP/10**%d'%N
+m['P-14.2'] = m['2,orb P']-14.2
+m['2,orb P'] = '$P-14.2 + 14.2'
+
 
 # -- set observables and minimum errors: it will affect the final result as it
 # -- changes the relative weight to raidal velocities
@@ -221,10 +222,6 @@ Radial velocities require also randomisation. `PMOIRED` method `bootstrapFit` ac
 ```python
 oleo.bootstrapFit(100, additionalRandomise=oLeo_vrad.randomise)
 oleo.showBootstrap()
-```
-
-
-```python
 compareParams(oleo.boot, 'PMOIRED interf+vrad (bootstrapped)')
 ```
 
@@ -257,11 +254,22 @@ m0 = {'1,ud': 1.26,
 
 m = m0.copy()
 
+# -- recenter the MJD0 around interferometric data
+m['2,orb MJD0'] -= m['2,orb P']*round((m['2,orb MJD0']-round(np.mean(allMJD), 0))/m['2,orb P'], 0)
+
+# -- only fit decimal part of the MJD0 to help fit converge
+m['MJD0-59690'] = m['2,orb MJD0']-59690
+m['2,orb MJD0'] = '$MJD0-59690 + 59690'
+
+# -- only fit decimal part of the Period to help fit converge
+m['P-14.2'] = m['2,orb P']-14.2
+m['2,orb P'] = '$P-14.2 + 14.2'
+
 # -- exploration pattern
 expl = {'rand':{'2,orb incl':(30, 150), # >90 to reverse rotation direction
                 '2,orb OMEGA':(0, 180), 
-                '2,orb MJD0': (59668.0-7,59668.0+7), 
-                #'2,orb P':(14, 15), # not knowing the period makes the search much more difficult...
+                'MJD0-59690': (-7,+7), 
+                #'P-14.2':(-1, 1), # not knowing the period makes the search much more difficult...
                 '2,orb a':(3, 5), # based on max observed separation
                 '2,orb q':(0.8, 0.9), # based on similar semi-amplitude
                }}
@@ -269,7 +277,7 @@ expl = {'rand':{'2,orb incl':(30, 150), # >90 to reverse rotation direction
 forceCircular = True
 if forceCircular:
     m['2,orb e'] = 0
-    m['2,orb MJD0'] -= m['2,orb omega']/360*m['2,orb P']
+    m['MJD0-59690'] -= m['2,orb omega']/360*m0['2,orb P']
     m['2,orb omega'] = 0
     doNotFit = ['2,orb e', '2,orb omega']
 else:
@@ -280,11 +288,15 @@ else:
 # -- prior:
 prior = [('2,orb q', '<', 1), # secondary is lighter
          ('2,f', '<', 1), # secondary is dimmer
+         ('2,orb e', '>=', 0),
+         ('2,orb e', '<', 1),
+         ('2,orb incl', '>=', 0),
+         ('2,orb incl', '<=', 180),
         ]
 
 oleo.setupFit({'obs':['T3PHI', '|V|']})
 
-oleo.gridFit(expl, Nfits=200, model=m, doNotFit=doNotFit, prior=prior)
+oleo.gridFit(expl, Nfits=100, model=m, doNotFit=doNotFit, prior=prior)
 # oleo.save('oLeo_all_orbits.pmrd', overwrite=True)
 ```
 
@@ -299,7 +311,7 @@ for g in oleo.grid:
     if g['chi2']<chi2min+deltaChi2:
         m = pmoired.oimodels.computeLambdaParams(g['best'])
         orb = {k.split('orb ')[1]:m[k] for k in m if k.startswith('2,orb')} 
-        print(g['chi2'], orb)
+        print('chi2=', g['chi2'], '\n > orbit:', orb)
 
 oleo.show()
 # -- show radial velocity data
