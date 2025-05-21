@@ -17,7 +17,7 @@ In this example, we look a basic interferometric data with the goal of estimatin
 
 ```python
 # -- uncomment to get interactive plots
-%matplotlib widget
+#%matplotlib widget
 import pmoired
 ```
 
