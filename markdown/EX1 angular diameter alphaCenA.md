@@ -3,14 +3,14 @@
 In this example, we look a basic interferometric data with the goal of estimating an angular diameter. The data set is from [Kervella et al. A&A 597, 137 (2017)](https://ui.adsabs.harvard.edu/abs/2017A%26A...597A.137K/abstract): observations of Alpha Cen A with the PIONIER beam combiner. The data have very little spectral resolution and will be treated as monochromatic. Data obtained from [JMMC OIDB](http://oidb.jmmc.fr/search.html?conesearch=alpha%20cen%20%2CJ2000%2C2%2Carcmin&instrument=PIONIER&order=%5Etarget_name), except date 2016-05-28, for which V2 is too high compared to other data.
 
 ### This example covers:
-- Loading multiple oifits files
-- Displaying all data in a same plot
-- Least square fit:
+- [Loading multiple oifits files](#load)
+- [Displaying all data in a same plot](#display)
+- [Least square fit](#fit):
     + uniform disk diameter
     + diameter with fixed center-to-limb darkening (Claret 4 parameters)
     + diameter and adjusted center-to-limb darkening (power law)
-- Better uncertainties estimates with bootstrapping
-- Access model's prediction to make custom plots
+- [Better uncertainties estimates with bootstrapping](#boot)
+- [Access model's prediction to make custom plots](#custom)
 
 *https://github.com/amerand/PMOIRED - Antoine Mérand (amerand@eso.org)*
 
@@ -21,7 +21,7 @@ In this example, we look a basic interferometric data with the goal of estimatin
 import pmoired
 ```
 
-## Load Data
+## Load Data <a id='load'></a>
 `pmoired.OI` loads a single file of a list of files. The result contains method to manipulate data, fit them and display results. 
 
 
@@ -29,7 +29,7 @@ import pmoired
 oi = pmoired.OI('../DATA/alphaCenA/*fits')
 ```
 
-## Show data and u,v
+## Show data and u,v <a id='display'></a>
 This is done using the `show` method in the `oi` object: 
 - `allInOne=True` plots everything on one plot. By default, every file will be shown on a separate figure
 - `perSetup=True` groups files per instruments and (spectral) setups. 
@@ -45,7 +45,7 @@ This is done using the `show` method in the `oi` object:
 oi.show()
 ```
 
-## Fit uniform disk model
+## Fit uniform disk model <a id='fit'></a>
 In order to fit data, we need to set up with method `setupFit` using a dict containing the context of the fit. only `obs` is mandatory:
 - `obs`: the list of observables to take into account, in `['V2', '|V|', 'T3PHI', 'DPHI', 'NFLUX']`. `T3PHI` stands for the closure phase. In addition, there are specific observables for spectrally dospersed data: `DPHI` differential phase and `NFLUX` the flux, normalised to the continuum.
 - `min error`: a dict to set the minimum error (overrinding what's in the data file) for each observable. e.g. `d['fit']['min error'] = {'V2':0.04}`
@@ -106,7 +106,7 @@ oi.doFit(param)
 oi.show(logV=True)
 ```
 
-## Bootstrapping for better estimate of uncertainties
+## Bootstrapping for better estimate of uncertainties <a id='boot'></a>
 The reduced $\chi^2$ of fits are large. This seems to indicate that errors in data are understimated, or that our model is inadequate. The V2 plot seem to indicate that our model is pretty good. The absolute value of the reduced $\chi^2$ is not used in the parameters' uncertainties estimation. Rather, `PMOIRED` use the convention that uncertainties are scaled to the data scatter, to match $\chi_{red}^2=1$. 
 
 Another way to estimate uncertainties is to bootstrap on the data and do multiple fits to estimate the scatter of the fitted parameters. It is achieved by drawing data randomly to create new data sets. The final parameters and uncertainties are estimated as the average and standard devitation of all the fits which were performed.
@@ -125,7 +125,7 @@ oi.bootstrapFit()
 oi.showBootstrap(showChi2=True)
 ```
 
-# Advanced features
+# Advanced features <a id='custom'></a>
 
 Data are stored in the variable `data` which is a list of dictionnary (one dict per file). Raw data in the `oi` object can be accessed as `oi.data[6]['OI_VIS2']['G2D0']`: `6` is index of the data file, `OI_VIS2` is the extension and `G2D0` is the baseline. In practice there is little need to access data manually.
 
@@ -242,9 +242,4 @@ It can be interesting to check how the parameters evolved during the fitting pro
 
 ```python
 oi.showFit()
-```
-
-
-```python
-
 ```
