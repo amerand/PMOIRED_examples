@@ -17,7 +17,7 @@ In this example, we look a basic interferometric data with the goal of estimatin
 
 ```python
 # -- uncomment to get interactive plots
-#%matplotlib widget
+%matplotlib widget
 import pmoired
 ```
 
@@ -138,60 +138,103 @@ display(oi.data[6]['OI_VIS2']['G2D0'])
 
 ## Access and plot model's predictions for custom plots
 
-You can access the last computed model in the list “oi._model”. All data from the same instrument are merged in “oi._merged”, so even if you had loaded many files, “oi._model” will not have the same structure as “oi.data”. In “oi._merged” and “oi._model”, all the baselines are grouped under the keyword “all”.
+You can access the last computed model in the list `oi._model`. All data from the same instrument are merged in `oi._merged`, so even if you had loaded many files, `oi._model` will not have the same structure as `oi.data`. In `oi._merged` and `oi._model`, all the baselines are grouped under the keyword `all`.
+
+Alternatively, one can compute a model using `pmoired.oimodels.VmodelOI`.
  
-If you want to plot the V2 and T3PHI for the best fit model, and the data. 
+If you want to plot the V2 and T3PHI for a set of models, as well as the data, you can proceed as follow: 
 
 
 ```python
 import matplotlib.pyplot as plt
 plt.close(100)
-plt.figure(100, figsize=(8,5))
+plt.figure(100, figsize=(10,4))
 
 axV2 = plt.subplot(121)
 axT3 = plt.subplot(122)
 
-for i in range(len(oi._merged)):
-    # -- for each instrument / setup
-    for k in set(oi._merged[i]['OI_VIS2']['all']['NAME']):
+models = {'UD':{'diam':8.2987},
+          'power law': {'alpha':  0.1372, 'diam':   8.4923, 'profile':'$MU**$alpha'},
+          'Claret-4': {'diam':   8.5098, 'profile':'1 - 0.7127*(1-$MU**0.5) + 0.0452*(1-$MU**1) + 0.2643*(1-$MU**1.5) - 0.1311*(1-$MU**2)',}
+        }
+# -- symbols and colors for each model 
+colors= {'UD':'dr', 'power law':'vb', 'Claret-4':'sy'}
+
+# -- compute observables mirroring pmoired structure
+Vmodels = {}
+for k in models:
+    Vmodels[k] = pmoired.oimodels.VmodelOI(oi._merged, models[k])
+
+_labelV2, _labelT3PHI = True, True
+
+for i in range(len(oi._merged)): # -- for each instrument / setup
+
+    for k in set(oi._merged[i]['OI_VIS2']['all']['NAME']): # V2 for each baseline
         # -- select baseline
         w = oi._merged[i]['OI_VIS2']['all']['NAME']==k
         # -- select valid data
-        f = ~oi._model[i]['OI_VIS2']['all']['FLAG'][w,:].flatten()
+        f = ~oi._merged[i]['OI_VIS2']['all']['FLAG'][w,:].flatten()
         # -- plot model
-        axV2.plot(oi._model[i]['OI_VIS2']['all']['B/wl'][w,:].flatten()[f],
-                 oi._model[i]['OI_VIS2']['all']['V2'][w,:].flatten()[f], '.k')
+        for m in Vmodels:
+            axV2.plot(Vmodels[m][i]['OI_VIS2']['all']['B/wl'][w,:].flatten()[f],
+                      Vmodels[m][i]['OI_VIS2']['all']['V2'][w,:].flatten()[f], 
+                      colors[m], alpha=0.2, label=m if _labelV2 else '')
+        _labelV2 = False
         # -- plot data
         axV2.errorbar(oi._merged[i]['OI_VIS2']['all']['B/wl'][w,:].flatten()[f],
                      oi._merged[i]['OI_VIS2']['all']['V2'][w,:].flatten()[f],
                      yerr=oi._merged[i]['OI_VIS2']['all']['EV2'][w,:].flatten()[f],
-                     linestyle='none', marker='.', capsize=2,
-                     label=oi._merged[i]['insname']+' '+k)
-
-    for k in set(oi._merged[i]['OI_T3']['all']['NAME']):
+                     linestyle='none', marker='.', capsize=2, color='k', alpha=0.2)
+                     
+    for k in set(oi._merged[i]['OI_T3']['all']['NAME']): # T3PHI for each triangle
         # -- select triangle
         w = oi._merged[i]['OI_T3']['all']['NAME']==k
         # -- select valid data
-        f = ~oi._model[i]['OI_T3']['all']['FLAG'][w,:].flatten()
-        # -- plot model
-        axT3.plot(oi._model[i]['OI_T3']['all']['Bmax/wl'][w,:].flatten()[f],
-                 oi._model[i]['OI_T3']['all']['T3PHI'][w,:].flatten()[f], '.k')
+        f = ~oi._merged[i]['OI_T3']['all']['FLAG'][w,:].flatten()
+        # -- plot models
+        for m in Vmodels:
+            axT3.plot(Vmodels[m][i]['OI_T3']['all']['Bmax/wl'][w,:].flatten()[f],
+                      Vmodels[m][i]['OI_T3']['all']['T3PHI'][w,:].flatten()[f], 
+                      colors[m], alpha=0.2, label=m if _labelT3PHI else '')
+        _labelT3PHI = False
+
         # -- plot data
         axT3.errorbar(oi._merged[i]['OI_T3']['all']['Bmax/wl'][w,:].flatten()[f],
                      oi._merged[i]['OI_T3']['all']['T3PHI'][w,:].flatten()[f],
                      yerr=oi._merged[i]['OI_T3']['all']['ET3PHI'][w,:].flatten()[f],
-                     linestyle='none', marker='.', capsize=2,
-                     label=oi._merged[i]['insname']+' '+k)
-        
-axV2.legend(fontsize=5)
-axV2.set_xlabel('B/$\lambda$ (m/$\mu$m)')
-axV2.set_ylabel('V$^2$')
+                     linestyle='none', marker='.', capsize=2, color='k', alpha=0.2,
+                     )
+    
+axV2.legend(fontsize=12)
+axV2.set_xlabel(r'B/$\lambda$ (m/$\mu$m)')
+axV2.set_ylabel(r'V$^2$')
+axV2.set_yscale('log')
+axV2.set_ylim([1e-4, 1e-1]) # zoom in on secont and third lobes
 
-axT3.legend(fontsize=5)
-axT3.set_xlabel('B$_\mathrm{max}$/$\lambda$ (m/$\mu$m)')
+axT3.legend(fontsize=12)
+axT3.set_xlabel(r'B$_\mathrm{max}$/$\lambda$ (m/$\mu$m)')
 axT3.set_ylabel('T3PHI (deg)')
 
 plt.tight_layout()
+```
+
+
+```python
+import numpy as np
+np.random.randn(10)
+
+x = np.linspace(0,1,10)
+y = 0.4*x + 5 
+e = 0.1
+#np.random.seed(123)
+y += e*np.random.randn(len(y))
+
+plt.close(10); plt.figure(10)
+
+chi2 = np.mean((y - 0.4*x-5)**2/e**2)
+
+plt.errorbar(x, y, yerr=e, label='chi2=%.3f'%(chi2))
+plt.legend()
 ```
 
 ## How to access the parameters of the fit, uncertainties and correlations 
