@@ -218,25 +218,6 @@ axT3.set_ylabel('T3PHI (deg)')
 plt.tight_layout()
 ```
 
-
-```python
-import numpy as np
-np.random.randn(10)
-
-x = np.linspace(0,1,10)
-y = 0.4*x + 5 
-e = 0.1
-#np.random.seed(123)
-y += e*np.random.randn(len(y))
-
-plt.close(10); plt.figure(10)
-
-chi2 = np.mean((y - 0.4*x-5)**2/e**2)
-
-plt.errorbar(x, y, yerr=e, label='chi2=%.3f'%(chi2))
-plt.legend()
-```
-
 ## How to access the parameters of the fit, uncertainties and correlations 
 The dictionnary `oi.bestfit` contains the result of the fitting process. The information there are mostly self-explantory
 
