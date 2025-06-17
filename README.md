@@ -9,6 +9,21 @@
 - [Example 5](<https://htmlpreview.github.io/?https://github.com/amerand/PMOIRED_examples/blob/main/html/EX5 Binary with spectroscopic lines.html>): multi-epochs binary fit of GRAVITY observations of o Leo, as shown in [Gallenne et al. (2023)](https://ui.adsabs.harvard.edu/abs/2023A%26A...672A.119G/abstract). The binary is resolved by GRAVITY, both astrometrically and and spectroscopically (Hydrogen Brackett$\gamma$ line at 2.166$\mu$m). The lines are fitted, and the radial velocities derived from GRAVITY are compared to the orbital fit.
 - [Example 6](<https://htmlpreview.github.io/?https://github.com/amerand/PMOIRED_examples/blob/main/html/EX6 global orbital fit.html>): shows how to do a global orbital fit (without fitting each epoch's separation), as well as combine the radial velocities in the fit for the same o Leo data a in example 5. The scheme how to combine additional data is generic and not limited to radial velocities in a binary. This example should enable you to develop your owm functions to handle any additional data to be fitted simultaneously to interferometric ones
 
+# How to run the examples in a python environment
+
+To create a python envirnoment, install `PMOIRED` (from pip) and jupyterlab, clone this repository and run jupyter-lab:
+
+```
+python3 -m venv pmoired
+source pmoired/bin/activate
+pip install pmoired jupyterlab
+git clone https://github.com/amerand/PMOIRED_examples
+cd PMOIRED_examples/notebooks/
+jupyter-lab
+deactivate
+```
+To erase the installation, you should erase the directories `pmoired` (containing the environment) and `PMOIRED_examples`.
+
 ## Acknowledgments
 
 This project has received funding from the European
