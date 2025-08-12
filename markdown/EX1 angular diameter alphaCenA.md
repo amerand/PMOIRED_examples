@@ -10,6 +10,7 @@ In this example, we look a basic interferometric data with the goal of estimatin
     + diameter with fixed center-to-limb darkening (Claret 4 parameters)
     + diameter and adjusted center-to-limb darkening (power law)
 - [Better uncertainties estimates with bootstrapping](#boot)
+- [Compare to predicted SATLAS I($\mu$) profile](#satlas)
 - [Access model's prediction to make custom plots](#custom)
 
 *https://github.com/amerand/PMOIRED - Antoine Mérand (amerand@eso.org)*
@@ -18,7 +19,10 @@ In this example, we look a basic interferometric data with the goal of estimatin
 ```python
 # -- uncomment to get interactive plots
 #%matplotlib widget
+import sys
+sys.path += ['../../PMOIRED/'] + sys.path
 import pmoired
+print(pmoired.__file__)
 ```
 
 ## Load Data <a id='load'></a>
@@ -123,6 +127,138 @@ oi.bootstrapFit()
 
 ```python
 oi.showBootstrap(showChi2=True)
+```
+
+# SATLAS CLD profile <a id='satlas'></a>
+
+using `pmoired.satlas` to interface with SATLAS I($\mu$) models published by Neilson & Lester ([2013a](https://ui.adsabs.harvard.edu/abs/2013A%26A...554A..98N/abstract) and [2013b](https://cdsarc.u-strasbg.fr/viz-bin/qcat?J/A+A/556/A86)):
+
+- red giant stars: https://cdsarc.u-strasbg.fr/viz-bin/qcat?J/A+A/554/A98
+- main sequence stars: https://cdsarc.u-strasbg.fr/viz-bin/qcat?J/A+A/556/A86
+  
+The interface includes correction for Rosseland diamaters (which does not occur at $MU==0). The Rosseland radius is the only one satisfying the relation between bolometric luminosity, effective temperature and radius. This correction corresponds to table16.dat for both sets of models. The correction is small for high surface gravity stars, but can be subtantial (>5%) for giant stars with low surface gravity. 
+
+
+```python
+from pmoired import satlas
+
+oi.setupFit({'obs':['V2'], 
+             'min relative error':{'V2':0.01},
+            })
+
+# -- download closest spheric model from Vizier:
+filenameSph = satlas.getClosestModel(5800, 4.3, 1.1, verbose=True, modeltype='spheric')
+# -- actual Teff, logg and mass
+print('Teff:', satlas.rossTable['Teff'][satlas._i], 
+      'logg:', satlas.rossTable['logg'][satlas._i], 
+      'Mass:', satlas.rossTable['mass'][satlas._i], 
+     )
+# -- create PMOIRED model 
+sph = satlas.readFile(filenameSph, band='H', component='*', verbose=True)
+# -- update first guess for Rosseland diameter (in mas)
+sph['*,ROSSDIAM'] = 8 
+
+# -- show the full model
+#pmoired.dpfit.__MAX_STR_LEN=9999
+oi.doFit(sph)
+
+# -- download closest spheric model from Vizier:
+filenamePla = satlas.getClosestModel(5800, 4.3, 1.1, verbose=True, modeltype='planar')
+# -- actual Teff, logg and mass
+print('Teff:', satlas.rossTable['Teff'][satlas._i], 
+      'logg:', satlas.rossTable['logg'][satlas._i], 
+     )
+# -- create PMOIRED model 
+pla = satlas.readFile(filenamePla, band='H', component='*', verbose=True)
+# -- update first guess for Rosseland diameter (in mas)
+pla['*,ROSSDIAM'] = 8 
+
+# -- show the full model
+#pmoired.dpfit.__MAX_STR_LEN=9999
+oi.doFit(pla)
+
+
+#oi.show(logV=True, imFov=10)
+```
+
+## Comparison between SATLAS on parametric fit to models
+
+---WORK IN PROGRESS---
+
+
+```python
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+exec('mu_sph=np.array('+sph['*,_MUtab']+')')
+exec('I_sph=np.array('+sph['*,_Itab']+')')
+ross=float(sph['*,diam'].split('/')[1])
+r_sph = np.sqrt(1-mu_sph**2)
+rp_sph = r_sph*ross
+mu0 = np.sqrt(1-ross**2)
+mup_sph = mu0 + mu_sph*(1-mu0)
+
+exec('mu_pla=np.array('+pla['*,_MUtab']+')')
+exec('I_pla=np.array('+pla['*,_Itab']+')')
+r_pla = np.sqrt(1-mu_pla**2)
+rp_pla = r_sph*ross
+mup_pla = mu0 + mu_pla*(1-mu0)
+
+# -- linear CLD for Teff: 5800.0 logg: 4.25 Mass: 1.1 in H-band (from https://cdsarc.u-strasbg.fr/ftp/J/A+A/556/A86/table2.dat)
+Ilinsph_NS = 1-0.4227*(1-mu_sph)
+
+# -- spherical 4 parameters for Teff: 5800.0 logg: 4.25 Mass: 1.1 in H-band (from https://cdsarc.u-strasbg.fr/ftp/J/A+A/556/A86/table5.dat)
+C4 = [5.1225,  -7.5009,   4.8330,  -0.9999]
+Ic4sph_NS = 1 - C4[0]*(1-mu_sph**0.5) - C4[1]*(1-mu_sph**1) - C4[2]*(1-mu_sph**1.5) - C4[3]*(1-mu_sph**2)
+
+# -- linear CLD for Teff: 5800.0 logg: 4.25 Mass: 1.1 in H-band (from https://cdsarc.u-strasbg.fr/ftp/J/A+A/556/A86/table2.dat)
+Ilinpla_NS = 1-0.2295*(1-mu_pla)
+
+# -- planar 4 parameters for Teff: 5800.0 logg: 4.25 in H-band (from https://cdsarc.u-strasbg.fr/ftp/J/A+A/556/A86/table11.dat_
+C4 = [0.0300, 1.0577, -1.2821, 0.5077]
+Ic4pla_NS = 1 - C4[0]*(1-mu_pla**0.5) - C4[1]*(1-mu_pla**1) - C4[2]*(1-mu_pla**1.5) - C4[3]*(1-mu_pla**2)
+
+# -- From Claret & Bloemen (2011), as reported in Kervella et al. (2017)
+Ic4pla_CB = 1 - 0.7127*(1-mu_pla**0.5) + 0.0452*(1-mu_pla**1) + 0.2643*(1-mu_pla**1.5) - 0.1311*(1-mu_pla**2)
+Ilinpla_CB = 1 - 0.2392*(1-mu_pla)
+
+plt.close(100) 
+plt.figure(100, figsize=(12, 4))
+axsph=plt.subplot(121)
+axsph.set_title('spherical models')
+axsph.set_ylim(-0.1,1)
+axsph.set_ylabel('I')
+axsph.set_xlabel(r'$\mu=\sqrt{1-\left(r/r_\mathrm{outer}\right)^2}$')
+axsph.vlines(mu0, 0, 1, color='k', linestyle=':')
+axsph.plot(mu_sph, I_sph, '-b', label='SATLAS spherical (N&L 2013)', alpha=0.8, linewidth=4)
+axsph.plot(mu_sph, Ic4sph_NS, '--', color='c', label='4p spherical (N&L 2013)', linewidth=2)
+axsph.plot(mu_sph, Ilinsph_NS, ':', color='c', label='lin spherical (N&L 2013)', linewidth=2)
+
+axsph.plot(mup_pla, I_pla, '-', color='0.5', alpha=0.2, label='ATLAS planar (N&L 2013)', linewidth=4)
+
+axsph.text(mu0, 0.75, 'Rosseland', rotation=90)
+
+axsph.plot(mup_sph, mu_sph**0.138, '-g', label='power law fit to PIONIER data')
+
+axsph.legend()
+
+axpla=plt.subplot(122)
+axpla.set_title('planar models')
+axpla.set_ylim(0,1)
+_mu = (mu_sph-mu0)/(1-mu0)
+axpla.plot(mu_pla, I_pla, '-r', label='ATLAS planar (N&L 2013)', alpha=0.8, linewidth=4)
+axpla.plot(mu_pla, Ic4pla_NS, '--', color='orange', label='4p planar (N&L 2013)', linewidth=2)
+axpla.plot(mu_pla, Ilinpla_NS, ':', color='orange', label='lin planar (N&L 2013)', linewidth=2)
+axpla.plot(mu_pla, Ic4pla_CB, '--', color='m', label='4p (Claret & Bloemen 2011)')
+axpla.plot(mu_pla, Ilinpla_CB, ':', color='m', label='lin (Claret & Bloemen 2011)')
+
+axpla.plot(_mu[_mu>=0], I_sph[_mu>0], '-', color='0.5', alpha=0.2, label='SATLAS spherical (N&L 2013)', linewidth=4)
+
+axpla.plot(mu_pla, mu_pla**0.138, '-g', label='power law fit to PIONIER data')
+
+axpla.set_xlabel(r'$\mu=\sqrt{1-\left(r/r_\mathrm{Ross}\right)^2}$')
+axpla.legend()
 ```
 
 # Advanced features <a id='custom'></a>
