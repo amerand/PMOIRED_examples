@@ -19,6 +19,7 @@ from astropy.io import fits
 import scipy.signal
 
 import pmoired
+print(pmoired.__file__)
 ```
 
 <a id='formating'></a>
@@ -407,4 +408,9 @@ else:
 p = pmoired.oimodels.computeLambdaParams(p)
 oi.show(p, imFov=15, imPow=0.2, imMax='99.5', imWl0=[2.16, p['kep,line_1_wl0']-0.0003, p['kep,line_1_wl0']], 
         vWl0=p['kep,line_1_wl0'], cmap='gist_stern', imPlx=12.5)
+```
+
+
+```python
+
 ```
