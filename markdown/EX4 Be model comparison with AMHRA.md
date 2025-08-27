@@ -323,20 +323,24 @@ AMBER data from [Meilland et al (2012)](https://ui.adsabs.harvard.edu/abs/2012A%
 
 The goal of this section is to compare `PMOIRED` fit to the determined parameters reported in [table 5](https://www.aanda.org/articles/aa/full_html/2012/02/aa17955-11/T5.html) of the original paper. In that study, the parameters' estimation was done using a fine grid rather than a gradient descent fit, hence the `PMOIRED` fit is slightly more accurate.  
 
+_2028/08/27: adding normalised squared visibility `NV2`. This observable is the analogue of `DPHI` in the sense that it is robust to poor or lack of calibration. It does not allow to constrain all parameters, in particular, the size of the disk in the continuum would not be constrained at all!_
+
 
 ```python
 # -- load data
 oi = pmoired.OI('../DATA/BeModelsAMHRA/ALPHACOL_*.fits')
 
-oi.setupFit({'obs':['V2', 'DPHI', 'T3PHI']})
+oi.setupFit({'obs':['V2', 'DPHI', 'T3PHI', 'NV2']})
 oi.show()
 ```
 
 
 ```python
 # -- fit only around the Brackett Gamma line
-oi.setupFit({'obs':['V2', 'DPHI', 'T3PHI'], 
-            'wl ranges':[(2.1655-0.003, 2.1655+0.003)]})
+oi.setupFit({'obs':['V2', 'DPHI', 'T3PHI', 'NV2'], 
+             'wl ranges':[(2.1655-0.003, 2.1655+0.003)],
+             'continuum ranges':[(2, 2.1655-0.002), ( 2.1655+0.002, 3)],
+            })
 
 import astropy.units as U
 # -- stellar angular diameter from paper, degenerate with continuum disk
@@ -408,6 +412,11 @@ else:
 p = pmoired.oimodels.computeLambdaParams(p)
 oi.show(p, imFov=15, imPow=0.2, imMax='99.5', imWl0=[2.16, p['kep,line_1_wl0']-0.0003, p['kep,line_1_wl0']], 
         vWl0=p['kep,line_1_wl0'], cmap='gist_stern', imPlx=12.5)
+```
+
+
+```python
+
 ```
 
 
