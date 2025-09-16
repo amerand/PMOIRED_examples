@@ -19,7 +19,6 @@ from astropy.io import fits
 import scipy.signal
 
 import pmoired
-print(pmoired.__file__)
 ```
 
 <a id='formating'></a>
@@ -325,6 +324,8 @@ The goal of this section is to compare `PMOIRED` fit to the determined parameter
 
 _2028/08/27: adding normalised squared visibility `NV2`. This observable is the analogue of `DPHI` in the sense that it is robust to poor or lack of calibration. It does not allow to constrain all parameters, in particular, the size of the disk in the continuum would not be constrained at all!_
 
+_2028/09/16: adding multiple models display in `oi.show()`_
+
 
 ```python
 # -- load data
@@ -366,56 +367,31 @@ p = {
     'kep,beta':       -0.5,
 }
 
+m12 = p.copy()
+
 # -- show the data compared to the parameters in the original paper
 #oi.show(p) 
 
 res = pmoired.oimodels.residualsOI(oi.data, p)
 print('chi2 with Meilland+2012 parameters: %.3f'%np.mean(res**2))
 
-if True:
-    # === actually fit to the data =====================
-    # -- "centered" parametrisation of wavelength, so fit converges efficiently
-    p['kep,line_1_wl0'] = '2.16612*(1 + $V0/2.998e5)'
-    p['V0'] = -70.0 # visually match the line
-   
-    # -- fit:
-    oi.doFit(p, doNotFit=['star,ud', # degenerated with disk,fwhm and disk,f
-                          'disk,f', # degenerated with disk,fwhm 
-                          'kep,beta'], # assume Keplerian velocity field        
-            )
-    p = oi.bestfit['best']
-else:
-    # === best fit parameters from fit above ================
-    # -- best fit: chi2~0.7532
-    p = {'V0':             -73.01, # +/- 0.33
-        'ac':             1.896, # +/- 0.064
-        'al':             5.690, # +/- 0.051
-        'kep,Vin':        360.54, # +/- 4.22
-        'kep,incl':       45.58, # +/- 0.86
-        'kep,line_1_EW':  1.038, # +/- 0.011
-        'kep,projang':    6.84, # +/- 0.53
-        'disk,f':         0.25,
-        'disk,fwhm':      '$ac*$star,ud',
-        'disk,incl':      '$kep,incl',
-        'disk,projang':   '$kep,projang',
-        'kep,beta':       -0.5,
-        'kep,diamin':     '$star,ud',
-        'kep,line_1_fwhm':'$al*$star,ud',
-        'kep,line_1_wl0': '2.16612*(1 + $V0/2.998e5)',
-        'star,f':         '1-$disk,f',
-        'star,ud':        0.6743177528395127,
-        }
-    res = pmoired.oimodels.residualsOI(oi.data, p)
-    print('chi2 with best fit parameters     : %.3f'%np.mean(res**2))
+# -- "centered" parametrisation of wavelength, so fit converges efficiently
+p['kep,line_1_wl0'] = '2.16612*(1 + $V0/2.998e5)'
+p['V0'] = -70.0 # visually match the line
+
+# -- fit:
+oi.doFit(p, doNotFit=['star,ud', # degenerated with disk,fwhm and disk,f
+                      'disk,f', # degenerated with disk,fwhm 
+                      'kep,beta'], # assume Keplerian velocity field        
+        )
+p = oi.bestfit['best']
     
-# -- evaluate string parameters
+# -- evaluate string parameters, to access central wavelength for nice plotting
 p = pmoired.oimodels.computeLambdaParams(p)
-oi.show(p, imFov=15, imPow=0.2, imMax='99.5', imWl0=[2.16, p['kep,line_1_wl0']-0.0003, p['kep,line_1_wl0']], 
-        vWl0=p['kep,line_1_wl0'], cmap='gist_stern', imPlx=12.5)
-```
-
-
-```python
+oi.show([p, m12], imFov=15, imPow=0.2, imMax='99.5', imWl0=[2.16, p['kep,line_1_wl0']-0.0003, p['kep,line_1_wl0']], 
+        vWl0=p['kep,line_1_wl0'], cmap='gist_stern', imPlx=12.5, 
+        modelColors=['r', 'b'], modelNames=[r'PMOIRED ($\chi^2=%.2f$)'%oi.bestfit['chi2'], 
+                                            r'Meilland+2012 ($\chi^2=%.2f$)'%np.mean(res**2)])
 
 ```
 
