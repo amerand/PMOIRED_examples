@@ -18,7 +18,10 @@ import numpy as np
 from astropy.io import fits
 import scipy.signal
 
+import sys
+sys.path = ['../../PMOIRED/'] + sys.path
 import pmoired
+print(pmoired.__file__)
 ```
 
 <a id='formating'></a>
@@ -174,6 +177,9 @@ The wavelength of the data can be different from the model, however it is mandat
 
 
 ```python
+from importlib import reload
+reload(pmoired.oifake)
+
 # -- same wavelength as model
 wl = cube['WL']
 

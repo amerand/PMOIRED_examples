@@ -19,8 +19,6 @@ In this example, we look a basic interferometric data with the goal of estimatin
 ```python
 # -- uncomment to get interactive plots
 #%matplotlib widget
-import sys
-sys.path += ['../../PMOIRED/'] + sys.path
 import pmoired
 print(pmoired.__file__)
 ```
@@ -46,7 +44,7 @@ This is done using the `show` method in the `oi` object:
 
 
 ```python
-oi.show()
+oi.show(obs=['T3PHI', 'V2'])
 ```
 
 ## Fit uniform disk model <a id='fit'></a>

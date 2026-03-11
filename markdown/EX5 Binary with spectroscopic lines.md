@@ -50,7 +50,7 @@ _Here we load data without telluric correction (`tellurics=False` in `pmoired.OI
 d = '../DATA/o_Leo/'
 files = sorted([os.path.join(d, f) for f in os.listdir(d) if f.endswith('calibrated.fits')])
 oi = pmoired.OI(files[0], insname='GRAVITY_SC', tellurics=False)
-oi.show()
+oi.show(obs=['T3PHI', '|V|'])
 ```
 
 
@@ -110,7 +110,7 @@ oi = pmoired.OI(files[0], insname='GRAVITY_SC')
 
 
 ```python
-oi.show()
+oi.show(obs=['T3PHI', '|V|', 'FLUX'])
 ```
 
 # Grid search to find binary separation <a id='grid'></a>
@@ -199,7 +199,7 @@ oi.bootstrapFit(Nfits=500)
 
 
 ```python
-oi.showBootstrap()
+oi.showBootstrap(sigmaClipping=5)
 ```
 
 # Modeling the Brackett $\gamma$ spectral features <a id='brackettgamma'></a>
@@ -229,10 +229,19 @@ Concerning the fitting strategy:
 # -- reload data with full spectral resolution
 oi = pmoired.OI(files[0], insname='GRAVITY_SC')
 # -- limit to wavelength range around BrG, use 2rd order polynomial for flux continuum fit
+
 oi.setupFit({'obs':['|V|', 'T3PHI', 'NFLUX', 'DPHI'],
             'wl ranges':[(2.166-0.025, 2.166+0.025)],
             'NFLUX order':2, 
             })
+doNotFit = []
+
+# -- only differential quantities
+# oi.setupFit({'obs':['NFLUX', 'DPHI', 'N|V|'],
+#             'wl ranges':[(2.166-0.025, 2.166+0.025)],
+#             'NFLUX order':2, 
+#             })
+# doNotFit = ['A,ud', 'B,ud']
 
 # -- previous best fit for first epoch, copy/pasted
 model = {'A,ud':1.2558, # +/- 0.0020
@@ -259,7 +268,7 @@ prior = [('A,line_brg_lorentzian', '>', 0.5),
          ('B,line_brg_lorentzian', '<', 3),
         ]
 
-oi.doFit(model, prior=prior)
+oi.doFit(model, prior=prior, doNotFit=doNotFit)
 
 oi.show(imFov=8, imX=oi.bestfit['best']['B,x']/2, imY=oi.bestfit['best']['B,y']/2)
 ```
@@ -308,7 +317,7 @@ oi.bootstrapFit(Nfits=100)
 
 
 ```python
-oi.showBootstrap()
+oi.showBootstrap(sigmaClipping=5)
 ```
 
 # Analysing all epochs <a id='allepochs'></a>
@@ -325,7 +334,8 @@ _Warning_: this takes a minute or two for each epoch! the binary files with para
 
 ```python
 RES = {} # fits to all epochs, keyed in MJD
-
+import time
+tinit = time.time()
 for i,f in enumerate(files):
   print('#'*7, 'epoch', i+1, 'of', len(files), '#'*27)
   # -- best model from single epoch analysis above
@@ -392,6 +402,7 @@ for i,f in enumerate(files):
 # -- saving results in binary file
 with open(os.path.join('../DATA/o_Leo','oLeo_models_allEpochs.dpy'), 'wb') as f:
   pickle.dump(RES, f)
+print(time.time()-tinit, 'seconds')
 ```
 
 ## Reloading one of the epoch
@@ -433,7 +444,7 @@ def orbit(t, P):
          'MJD0': time of periastron,
          'e': eccentricity,
          'omega': argument of periastron in degrees,
-         'OMEGA': longitude of asscend nodes in degrees,
+         'OMEGA': longitude of ascending nodes in degrees,
          'i': inclination, in degrees,
          }
     to compute velocities, either:

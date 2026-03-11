@@ -107,6 +107,7 @@ oi.setupFit(fit)
 doNotFit=['star,f', 'star,ud']
 oi.doFit(param, doNotFit=doNotFit)
 oi.show(imFov=40, imMax='99', logB=True, showUV=False, imPlx=1.75)
+oi._dataAxes['PIONIER']['V2'].set_xlim(5, 100)
 ```
 
 ## Add slope in the disk spectrum using a spectral index.<a id='spectral_index'></a>
@@ -168,6 +169,7 @@ oi.setupFit(fit)
 doNotFit=['star,ud']
 oi.doFit(param, doNotFit=doNotFit)
 oi.show(imFov=40, logB=True, imMax='99', imPlx=1.75, showUV=False)
+oi._dataAxes['PIONIER']['V2'].set_xlim(5, 100)
 ```
 
 ## Inclination and projected angle<a id='inclination_projangle'></a>
@@ -196,6 +198,8 @@ oi.setupFit(fit)
 doNotFit=['star,ud']
 oi.doFit(param, doNotFit=doNotFit)
 oi.show(allInOne=True, imFov=40, logB=True, imMax='99', imPlx=1.75, showUV=False)
+print(oi._dataAxes.keys())
+oi._dataAxes['ALL']['V2'].set_xlim(5, 100)
 ```
 
 # Change the geometry to a more realistic rim <a id='rim_and_disk'></a>
@@ -240,6 +244,8 @@ else:
     pass
 
 oi.show(param, allInOne=True, imFov=30, imMax='99', logB=True, imPlx=1.75, showUV=False)
+oi._dataAxes['ALL']['V2'].set_xlim(5, 100)
+oi._dataAxes['ALL']['T3PHI'].set_xlim(5, 100)
 ```
 
 ## adding an extended disk
@@ -300,11 +306,18 @@ else:
     pass
 
 oi.show(param, allInOne=True, imFov=30, imMax='99', logB=True, imPlx=1.75)
+oi._dataAxes['ALL']['V2'].set_xlim(5, 100)
+oi._dataAxes['ALL']['T3PHI'].set_xlim(5, 100)
 ```
 
 
 ```python
 oi.showFit()
+```
+
+
+```python
+pmoired.oimodels._nSigmas(7.2, 6.4, 1073)
 ```
 
 ## Off-centred star to improve closure phases fit <a id='off_centered_star'></a>
@@ -366,6 +379,8 @@ else:
     pass
 
 oi.show(param, allInOne=True, imFov=30, imMax='99', logB=True, imPlx=1.75)
+oi._dataAxes['ALL']['V2'].set_xlim(5, 100)
+oi._dataAxes['ALL']['T3PHI'].set_xlim(5, 100)
 ```
 
 
