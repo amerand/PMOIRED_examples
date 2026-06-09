@@ -98,7 +98,7 @@ One can refine the estimation of the companion's parameters, by using bootstrapp
 
 ```python
 oi.bootstrapFit(300)
-oi.showBootstrap()
+oi.showBootstrap(densify=2)
 ```
 
 # Look for a third component: detection limit
@@ -139,4 +139,9 @@ oi.detectionLimit(expl, '3,f', model=best, Nfits=500, nsigma=3,
                             ('np.sqrt(3,x**2+3,y**2)', '>', step/2) ])
  
 oi.showLimGrid(mag=1)
+```
+
+
+```python
+
 ```

@@ -18,8 +18,8 @@ import numpy as np
 from astropy.io import fits
 import scipy.signal
 
-import sys
-sys.path = ['../../PMOIRED/'] + sys.path
+# import sys
+# sys.path = ['../../PMOIRED/'] + sys.path
 import pmoired
 print(pmoired.__file__)
 ```
@@ -177,9 +177,6 @@ The wavelength of the data can be different from the model, however it is mandat
 
 
 ```python
-from importlib import reload
-reload(pmoired.oifake)
-
 # -- same wavelength as model
 wl = cube['WL']
 
@@ -394,10 +391,78 @@ p = oi.bestfit['best']
     
 # -- evaluate string parameters, to access central wavelength for nice plotting
 p = pmoired.oimodels.computeLambdaParams(p)
-oi.show([p, m12], imFov=15, imPow=0.2, imMax='99.5', imWl0=[2.16, p['kep,line_1_wl0']-0.0003, p['kep,line_1_wl0']], 
+oi.show([p, m12], imFov=15, imPow=0.2, imMax='99.5', imWl0=[2.163, p['kep,line_1_wl0']-0.0003, p['kep,line_1_wl0']], 
         vWl0=p['kep,line_1_wl0'], cmap='gist_stern', imPlx=12.5, 
         modelColors=['r', 'b'], modelNames=[r'PMOIRED ($\chi^2=%.2f$)'%oi.bestfit['chi2'], 
                                             r'Meilland+2012 ($\chi^2=%.2f$)'%np.mean(res**2)])
+
+```
+
+# Modeling central star as a rotating one
+
+rotating star model based on [Aufdenberg el al. (2006)](https://ui.adsabs.harvard.edu/abs/2006ApJ...645..664A/abstract).:
+- `Rpole`: polar radius, in $R_\odot$ or `diameq` equatorial diameter in mas
+- `dist`: distance to the star in parsec.
+- `Tpole`: polar temperature (mostly for LD computation)
+- `omaga`: fractional rotation rate w.r.t to the critical rotation rate
+- `incl` and `projang` incination and position angle in degress. NOTE: the PA is defined for the pole, whereas the PA dfor the disk is for the equatorla plane. 90º difference
+- `mass`: mass of the star, in $M_\odot$
+
+optional:
+- `pline_0_wl0`. `pline_0_f`, `pline_0_gaussian`: photospecric line (i.e. affected by rotation)
+- `beta`: optional von Zeipel parameter (default is 0.25)
+- `vpuls`: pulsation velocity (negative means toward observer) in km/s
+
+
+```python
+m = {'V0':             -72.88, # +/- 0.33
+    'ac':             1.934, # +/- 0.063
+    'al':             5.676, # +/- 0.051
+    'kep,Vin':        357.41, # +/- 4.03
+    'kep,incl':       45.88, # +/- 0.85
+    'kep,line_1_EW':  1.031, # +/- 0.010
+    'kep,projang':    6.87, # +/- 0.54
+    'disk,f':         0.25,
+    'disk,fwhm':      '$ac*$STARDIAM',
+    'disk,incl':      '$kep,incl',
+    'disk,projang':   '$kep,projang',
+    'kep,beta':       -0.5,
+    'kep,diamin':     '$STARDIAM',
+    'kep,line_1_fwhm':'$al*$STARDIAM',
+    'kep,line_1_wl0': '2.16612*(1 + $V0/2.998e5)',
+    'star,f':         '1-$disk,f',
+    'STARDIAM':0.673,
+    'star,diameq':   '$STARDIAM',
+    'star,mass': 4.5,
+    'star,incl': '$kep,incl',
+    'star,projang': '$kep,projang+90',
+     'star,omega':0.95,
+    'star,Tpole':12000,
+    'star,dist': 80,
+     'star,pline_1_wl0': '$kep,line_1_wl0',
+     'star,pline_1_gaussian': 0.5,
+    'star,pline_1_f': -0.8,
+    }
+
+oi.doFit(m, doNotFit=['star,ud', # degenerated with disk,fwhm and disk,f
+                      'disk,f', # degenerated with disk,fwhm 
+                      'kep,beta', # assume Keplerian velocity field        
+                     'star,mass',
+                     'star,dist',
+                      'star,Tpole',
+                      'star,omega',
+                      'star,pline_1_gaussian',
+                      'star,pline_1_f',                      
+                      'STARDIAM',
+                     ], prior=[('star,pline_1_f', '<', 0)]); m = oi.bestfit['best']
+
+
+oi.show(m, imFov=3, imPow=0.2, imMax='99.5', imWl0=[2.163, p['kep,line_1_wl0']-0.0005, p['kep,line_1_wl0']], 
+        vWl0=p['kep,line_1_wl0'], imLegend=False)
+
+# -- get the polar radius and equatorial velocity of the rotating star:
+print(f"{pmoired.oimodels.rotastar.star['Rpole']=:.2f} Rsun")
+print(f"{pmoired.oimodels.rotastar.star['Veq']=:.1f} km/s")
 
 ```
 

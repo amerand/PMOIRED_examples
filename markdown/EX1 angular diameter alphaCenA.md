@@ -377,3 +377,8 @@ It can be interesting to check how the parameters evolved during the fitting pro
 ```python
 oi.showFit()
 ```
+
+
+```python
+
+```

@@ -50,7 +50,7 @@ _Here we load data without telluric correction (`tellurics=False` in `pmoired.OI
 d = '../DATA/o_Leo/'
 files = sorted([os.path.join(d, f) for f in os.listdir(d) if f.endswith('calibrated.fits')])
 oi = pmoired.OI(files[0], insname='GRAVITY_SC', tellurics=False)
-oi.show(obs=['T3PHI', '|V|'])
+oi.show(obs=['NFLUX', 'T3PHI', '|V|'])
 ```
 
 
@@ -163,7 +163,7 @@ constrain = [('np.sqrt(B,x**2+B,y**2)', '>', step),
 oi.gridFit(expl, model=m, doNotFit=['A,ud', 'B,ud'], prior=prior, constrain=constrain)
 
 # -- show the grid result
-oi.showGrid(interpolate=True, logV=1, cmap='gist_stern')
+oi.showGrid(interpolate=True, logV=1)
 
 # -- show the data and the best fit model
 oi.show()

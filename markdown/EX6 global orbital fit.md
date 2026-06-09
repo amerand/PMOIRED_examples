@@ -31,7 +31,8 @@ oi = pmoired.OI('/Users/amerand/DATA/Science/HD210763/*fits', insname='GRAVITY_S
 allMJD = []
 for d in oi.data:
     allMJD.extend(list(d['MJD']))
-print(sorted(allMJD), np.median(allMJD))
+print(f"{sorted(allMJD)=}")
+print(f"{np.median(allMJD)=}")
 ```
 
 
@@ -245,11 +246,6 @@ for g in oi.grid:
         orb = {k.split('orb ')[1]:round(m[k], 4) for k in m if k.startswith('2,orb')} 
         print('chi2=%.4f'%g['chi2'], '\n > orbit:', orb)
 
-```
-
-
-```python
-doNotFit
 ```
 
 
