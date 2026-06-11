@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
 
+# -- initial install
+"""
+python3 -m venv pmrd
+. pmrd/bin/activate
+pip install git+https://github.com/amerand/PMOIRED
+pip install jupyterlab ipympl
+"""
+
+# -- update PMOIRED to run with latest 
+"""
+pip uninstall pmoired
+pip install git+https://github.com/amerand/PMOIRED
+"""
+
 import os, time
 from multiprocessing import Pool
 
@@ -12,7 +26,6 @@ files = ['EX1 angular diameter alphaCenA.ipynb',
          'EX6 global orbital fit.ipynb'
         ]
 files = [os.path.join(directory, f) for f in files]
-
 
 def processOne(f):
     #print('Processing "'+f+'"')
