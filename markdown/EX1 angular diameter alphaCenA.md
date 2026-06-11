@@ -13,12 +13,17 @@ In this example, we look a basic interferometric data with the goal of estimatin
 - [Compare to predicted SATLAS I($\mu$) profile](#satlas)
 - [Access model's prediction to make custom plots](#custom)
 
+Updates:
+- June 2026: Now PMOIRED takes into account the spectral width of the channels automatically, accounting for moderate bandwidth smearing
+
 *https://github.com/amerand/PMOIRED - Antoine Mérand (amerand@eso.org)*
 
 
 ```python
 # -- uncomment to get interactive plots
 #%matplotlib widget
+import sys
+sys.path = ['../../PMOIRED'] + sys.path
 import pmoired
 print(pmoired.__file__)
 ```
@@ -54,7 +59,9 @@ In order to fit data, we need to set up with method `setupFit` using a dict cont
 - `min relative error`: a dict to set the minimum relative error (overrinding what's in the data file) for each observable. e.g. `d['fit']['min relative error'] = {'V2':0.04}`
 - `max error`: a dict to ignore data with errors larger than a certain value. e.g. `d['fit']['max error'] = {'V2':0.1}`
 - `wl ranges`: list of ranges ($\lambda_{min}[\mu m]$, $\lambda_{max}[\mu m]$) to restrict fit. e.g. `d['fit']['wl ranges'] = [(1.6, 1.9), (2.2, 2.3)]`. Especially useful for spectral data, to restric fit around a single line
-- `baseline ranges`: list of ranges (B$_{min}[m]$, B$_{max}[m]$) to restrict fit. e.g. `d['fit']['baseline ranges'] = [(10, 50), (50, 100)]`. Note that is also applies to closure phases: all baselines in the triangles must satisfy the constrainss!
+- `baseline ranges`: list of ranges (B$_{min}[m]$, B$_{max}[m]$) to restrict fit. e.g. `d['fit']['baseline ranges'] = [(10, 50), (50, 100)]`. Note that is also applies to closure phases: all baselines in the triangles must satisfy the constrains!
+
+*New in June 26*: `setupFit` automatically assigns a wavelenngth kernel to take into account the width of the spectral channels. This only works for instruments with spectral dispersion! 
 
 The fitting method, `oi.doFit` takes the first guess as input parameter: the parameters stored in a dictionnary define the model (models ). For example, a uniform disk of 8 milli-ardsecond in diameter is  `{'ud':8.0}`. The result is a dict (`oi.bestfit`) containing (among other things):
 - `best`: the dictionnary of best fit parameters
@@ -68,7 +75,6 @@ The `show` method now show the data and the best fit model.
 ```python
 oi.setupFit({'obs':['V2'], 
              'min relative error':{'V2':0.01},
-             #'baseline ranges': [(50, 100)],
             })
 oi.doFit({'ud':8.5})
 oi.show(logV=1)
@@ -101,11 +107,34 @@ The power law center-to-limb darkening has been proposed by [Hestroffer (1997)](
 
 ```python
 oi.setupFit({'obs':['V2'], 
-             'min relative error':{'V2':0.01}
+             'min relative error':{'V2':0.01},
             })
 param = {'diam':8.0, 'profile':'$MU**$alpha', 'alpha':0.5}
 oi.doFit(param)
 oi.show(logV=True)
+```
+
+## include bandwidth smearing to improve visibility in the null
+
+When the object is over-resolved, the visibility cannot longer be considered monochormatic for each spectral channel. in `PMOIRED` bandwidth smearing can be taken into account but this is needs to be done manually, i.e. the user need to assess if bandwidth smearing could be an issue. 
+
+
+- For a binary, a separation of $\frac{R\lambda}{2B_{max}}$ ($\lambda$ is the mean wavelength, $R$ is the spectral resolution ($\lambda/\delta\lambda$) and $B_{max}$ the maximum baseline) leads to a reduction of a factor of 2 of the closure phase and visibility modulation amplitude. For this PIONIER dataset, this leads to a separation of about 112 mas ($\lambda=1.6\mu$m, $R=34$ and $B_{max}=100$)
+- For a star, the visibility null shows the effect of smearing for much smaller sizes than the binary case. A good rule of thumb is that  anytime the visibility passes through a null (very close to 0, in the 1e-4 regime), it is a good idea to enable bandwidth smearing in `setupFit`. The `smear` parameter is an integer, for the oversampling of the visibility in wavelength. A good idea is to use "a few" (here 5)
+
+Activating the bandwidth smearing will increase significantly the amount of calculation 
+
+
+```python
+oi.setupFit({'obs':['V2'], 
+             'min relative error':{'V2':0.01},
+            })
+param = {'diam':8.0, 'profile':'$MU**$alpha', 'alpha':0.5, }
+oi.doFit(param)
+oi.show(logV=True)
+#oi._dataAxes['PIONIER']['V2'].set_ylim(5e-6, 2e-3)
+#oi._dataAxes['PIONIER']['V2'].set_xlim(50, 60)
+
 ```
 
 ## Bootstrapping for better estimate of uncertainties <a id='boot'></a>
@@ -119,7 +148,7 @@ The bootstrap fits are filtered using a recursive sigma clipping algorithm. You 
 
 
 ```python
-oi.bootstrapFit()
+oi.bootstrapFit(100)
 ```
 
 
@@ -376,9 +405,4 @@ It can be interesting to check how the parameters evolved during the fitting pro
 
 ```python
 oi.showFit()
-```
-
-
-```python
-
 ```
